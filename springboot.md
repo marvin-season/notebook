@@ -524,3 +524,329 @@ thymeleaf自带format, `${#date.format(date, pattern)}`
 **2、forward:/A/B**
 
 `forward:/A/B` 中间不能有间隔
+
+## 整合其他技术
+
+#### 整合druid
+
+**配置文件**
+
+```properties
+spring.datasource.type=com.alibaba.druid.pool.DruidDataSource
+spring.datasource.driver-class-name=com.mysql.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/page_info?characterEncoding=UTF-8&useSSL=true
+spring.datasource.username=root
+spring.datasource.password=123456
+#	此属性在默认的数据源中没有，需要自己配置数据源
+spring.datasource.maxActive=11
+```
+
+**编码方式**
+
+```java
+@Configuration
+public class DruidConfig {
+//	自己配置的数据源
+    @ConfigurationProperties(prefix = "spring.datasource")
+    @Bean
+    public DataSource druid(){
+        return new DruidDataSource();
+    }
+//    配置监控
+//    配置servlet
+//    配置filter
+    @Bean
+    public ServletRegistrationBean statViewServlet(){
+        ServletRegistrationBean bean = new ServletRegistrationBean(new StatViewServlet(), "/druid/*");
+        Map<String, String> init = new HashMap<String, String>();
+        init.put("loginUsername", "admin");
+        init.put("loginPassword", "123456");
+        init.put("allow", "");//允许所有
+        init.put("deny","192.168.15.21");
+        bean.setInitParameters(init);
+        return bean;
+    }
+
+    @Bean
+    public FilterRegistrationBean webStatFilter(){
+        FilterRegistrationBean bean = new FilterRegistrationBean();
+        bean.setFilter(new WebStatFilter());
+        Map<String, String> init = new HashMap<String, String>();
+        init.put("exclusions", "*.js, *.css, /druid/*");
+        bean.setInitParameters(init);
+        bean.setUrlPatterns(Arrays.asList("/*"));
+        return bean;
+    }
+}
+```
+
+#### 整合mybatis
+
+**引入依赖**
+
+```xml
+<dependency>
+    <groupId>org.mybatis.spring.boot</groupId>
+    <artifactId>mybatis-spring-boot-starter</artifactId>
+    <version>2.1.3</version>
+</dependency>
+```
+
+**mapper**
+
+```xml
+// @Mapper标注后，该类就会被扫描
+// @MapperScan(value = "mapper")扫描mapper包下面所有的类
+// 写一个就好 --> @Repository
+@Mapper
+public interface UserDao {
+
+    @Select("select * from user")
+    List<User> findAll();
+
+    @Update("update user set info = #{info} where id = #{id}")
+    void updateInfo(User user);
+
+}
+```
+
+**配置文件**
+
+```properties
+mybatis.mapper-locations=sql语句存放位置(xml)
+mybatis.config-location=主配置文件
+mybatis.type-aliases-package=开启别名类的所在包
+
+mybatis.mapper-locations=classpath:/mawenshu/mapper/*.xml
+
+#开启别名
+mybatis.type-aliases-package=mawenshu.entity
+```
+
+**mapper.xml**
+
+```xml
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+```
+
+#### 整合SpringData JPA
+
+**引入依赖**
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-data-jpa</artifactId>
+</dependency>
+```
+
+**配置文件**
+
+```properties
+spring.datasource.type=com.alibaba.druid.pool.DruidDataSource
+spring.datasource.driver-class-name=com.mysql.jdbc.Driver
+spring.datasource.url=jdbc:mysql://localhost:3306/page_info?characterEncoding=UTF-8&useSSL=true
+spring.datasource.username=root
+spring.datasource.password=123456
+
+logging.level.root=info
+logging.level.mawenshu.dao=debug
+
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+--- 
+# ddl-auto:create----每次运行该程序，没有表格会新建表格，表内有数据会清空
+# ddl-auto:create-drop----每次程序结束的时候会清空表
+# ddl-auto:update----每次运行程序，没有表格会新建表格，表内有数据不会清空，只会更新
+# ddl-auto:validate----运行程序会校验数据与数据库的字段类型是否相同，不同会报错
+---
+```
+
+ORM**对象关系映射**
+
+```java
+//	告诉JPA这是一个实体类(和数据表映射的类)
+@Entity 
+//	和那个表映射，缺省映射实体类的短类名
+@Table
+// lombok
+@NoArgsConstructor
+@AllArgsConstructor
+@Data
+public class Book {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private String id;
+    //	数据表中的一个列，缺省对应username&&password
+    @Column(name="username", length="maxlength")
+    private String username;
+    private String password;
+}
+```
+
+`strategy = GenerationType.IDENTITY`
+
+```properties
+TABLE：使用一个特定的数据库表格来保存主键。 
+SEQUENCE：根据底层数据库的序列来生成主键，条件是数据库支持序列。 
+IDENTITY：主键由数据库自动生成（主要是自动增长型） 
+AUTO：主键由程序控制。
+```
+
+**maspper**
+
+```java
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface BookRepository extends JpaRepository<Book, String> {
+}
+```
+
+```properties
+`Repository` 一个空类，有常用的两个实现类
+
+`CRUDRepository`基本的增删改查
+
+`PagingAndSortingRepository`基本的分页和排序
+
+`JpaRepository` CRUDRepository和PagingAndSortingRepository的继承类
+
+<Book, String>： Book操作哪个实体类，主键的类型
+```
+
+
+
+```mermaid
+classDiagram
+    Repository <|-- CRUDRepository :实现
+    <<interface>> Repository
+    CRUDRepository<--PagingAndSortingRepository
+    PagingAndSortingRepository<--JpaRepository
+```
+
+## 文件的上传与下载
+
+**文件表**
+
+```sql
+CREATE TABLE `t_file`  (
+  `id` int(8) UNSIGNED NOT NULL,
+  `oldFileName` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `newFileName` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `suffix` varchar(20) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `path` varchar(300) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `size` varchar(200) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `type` varchar(120) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  ` isImg` varchar(8) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `downloadCount` int(6) NULL DEFAULT NULL,
+  `uploadTime` datetime(0) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) 
+```
+
+**文件操作的相关配置**
+
+```properties
+#	设置上传APP的大小限制
+spring.servlet.multipart.max-file-size=100MB
+spring.servlet.multipart.max-request-size=100MB
+#	mybatis的配置
+mybatis.type-aliases-package=mawenshu.domain
+mybatis.mapper-locations=classpath:/mawenshu/mapper/*.xml
+```
+
+
+
+#### 文件上传
+
+```java
+@CrossOrigin // 解决跨域
+@RestController
+@RequestMapping("file")
+public class FileController {
+
+    private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    
+    @Autowired
+    private MyFile myFile;
+
+    @Autowired
+    IFileService fileService;
+
+    @PostMapping("upload")
+    /**
+     *	ResultInfo实体类封装信息
+     */
+    ResultInfo<MyFile> upload(MultipartFile multipartFile) throws FileNotFoundException {
+        String date = sdf.format(new Date());
+        String size = String.format("%.3f", multipartFile.getSize() / (1024 * 1024.0)) + "MB";
+        String oldName = multipartFile.getOriginalFilename();
+        String suffix = FilenameUtils.getExtension(oldName);
+        String folder = ResourceUtils.getURL("classpath:").getPath() + "static/files/";
+        File file = new File(folder, date);
+
+        if (!file.exists()) {
+            file.mkdirs();	//根据日期创建文件夹
+        }
+//        新文件名
+        String newName = date.replace("-", "") + UUID.randomUUID().toString().replace("-", "") + "." + suffix;
+        try {
+            // 上传文件到服务器的指定路径
+            multipartFile.transferTo(new File(file, newName));
+            myFile.setUserId("1")
+                	.setUploadTime(new Date()).setSize(size)
+                    .setType(multipartFile.getContentType())
+                    .setSuffix(suffix)
+                	.setPath("/files/" + date + "/")
+                    .setOldName(oldName)
+                	.setNewName(newName)
+                    .setDescription("第一条记录").setDownloadCount(0);
+
+            //  修改或者插入
+            fileService.save(myFile);
+            System.out.println("上传文件成功");
+            //  返回前端数据
+            return new ResultInfo<>(true, "上传文件成功", myFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new ResultInfo<>(false, "上传文件失败", myFile);
+    }
+}
+```
+
+#### 文件下载
+
+```java
+	/**
+     * @param newName  服务器当中的文件名称,文件名规则 Date+UUID+suffix
+     * @param response
+     */
+    @GetMapping("download")
+    public void download(MyFile myFile,
+                         HttpServletResponse response,
+                         HttpSession session) throws Exception {
+        System.out.println("myFile = " + myFile);
+        String newName = myFile.getNewName();
+        String folder = ResourceUtils.getURL("classpath:").getPath() + "static/" + myFile.getPath();
+        System.out.println("folder = " + folder);
+
+        // 文件回响类型
+        response.setContentType(session.getServletContext().getMimeType(newName));
+        // 弹出下载
+        response.setHeader("content-disposition", "attachment;filename=" + newName);
+
+        File file = new File(folder, newName);
+
+        FileInputStream fis = new FileInputStream(file);
+        ServletOutputStream sos = response.getOutputStream();
+		// 将文件从 fis 拷贝到 sos是流中 
+        IOUtils.copy(fis, sos);
+        fis.close();
+        sos.close();
+    }
+```
+
