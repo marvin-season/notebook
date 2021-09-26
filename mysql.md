@@ -1,3 +1,11 @@
+## 范式
+
+```properties
+1NF: 列不可再分
+2NF: 消除部份依赖
+3NF:消除传递依赖
+```
+
 ## 创建表
 
 **数据类型**
@@ -136,16 +144,6 @@ order by emp.sal desc
 limit 0,5
 # 参数： 页数pageNo， 记录数pageSize
 #（pageNo-1）* pageSize-->start
-```
-
-
-
-## 范式
-
-```properties
-1NF: 列不可再分
-2NF: 消除部份依赖
-3NF:消除传递依赖
 ```
 
 ## 事务
