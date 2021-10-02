@@ -7,20 +7,15 @@
 #### 创建bean
 
 ```properties
-**ioc**:将创建bean的权利交给spring 容器管理， 包括两个步骤：
+ioc:将创建bean的权利交给spring 容器管理， 包括两个步骤：
 
- 1、创建一个bean放到spring容器中， 2、注入使用这个bean
-
+1、创建一个bean放到spring容器中， 2、注入使用这个bean
 spring中可以使用xml的声明的方式在容器中创建一个bean
 ```
-
-![image-20200809092021853](file://D:\develop\note\java%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-md\SSM\images\bean01.png?lastModify=1631453479)
 
 ```properties
 new 一个AccountService类型的bean,放到spring的容器中， 
 ```
-
-![image-20200809092311727](file://D:\develop\note\java%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-md\SSM\images\bean-factory.png?lastModify=1631453578)
 
 ```properties
 可以使用工厂方法
@@ -88,11 +83,7 @@ ac.close();
 
 **(写死，不经改变，不灵活，很难满足多变需求)**
 
-![image-20200809131453339](file://D:\develop\note\java%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-md\SSM\images\image-20200809131453339.png?lastModify=1631454086)
-
 ##### setter注入
-
-![image-20200809151004156](file://D:\develop\note\java%E5%AD%A6%E4%B9%A0%E7%AC%94%E8%AE%B0-md\SSM\images\image-20200809151004156.png?lastModify=1631454153)
 
 ##### 特殊类型数据注入
 

@@ -1,10 +1,16 @@
-## 范式
+## 思维导图概览
+
+![mysql](./mysql.assets/mysql.png)
+
+## 3范式
 
 ```properties
 1NF: 列不可再分
 2NF: 消除部份依赖
 3NF:消除传递依赖
 ```
+
+
 
 ## 创建表
 
@@ -23,15 +29,112 @@ clob: 字符大对象 --> 4G Character Large OBject
 blob: 二进制大对象-->图片等
 ```
 
+## 快速复制
+
+```sh
+create table table_name1 as select * from table_name2
+```
+
 ## 删除表
 
 ```sh
 drop table if exist table_name;
 ```
 
+## 约束
+
+### 非空约束
+
+**not null**
+
+### 唯一约束
+
+```sh
+# 联合约束 ？✖︎
+create table tableName（
+	name varchar（20）unique，# 列级约束写法
+	age varchar（20）unique
+）
+# 表示的是各自分别唯一约束
+
+# 联合约束 ？✓
+create table tableName（
+	name varchar（20，
+	age varchar（20），
+	unique（name， age）# 表级约束写法
+）
+```
+
+### 主健约束
+
+```sh
+主健约束
+
+create table aaa(
+	id int primary key # 单一主键
+)
+
+# 复合主键
+create table aaa(
+	id int，
+	name varchar（20），
+	primary key(id, name)
+)
+
+# 一张表主健约束只能是一个
+
+1、自然主键（常用）
+2、业务主键
+```
+
+### 外健约束
+
+```mysql
+外健依赖于主键值
+父子 子父
+
+fatherTable id
+create table sonTable（
+	id int，
+	fatherId int，
+	foreign key（fatherId） references fatherTable(id)
+）
+```
+
+## 存储引擎
+
+```tex
+数据的存储/组织方式
+show create table tableName；
+
+...
+()
+ENGINE= InnoDB ...
+
+create table tableName（
+	...
+）ENGINE = InnoDB default charset=utf8
+
+创建表的时候添加存储引擎
+默认的存储引擎是InnoDB，字符编码是utf8
 
 
-## 多表链接
+MyISAM：
+	格式文件：存储表的结构 .frm
+	数据文件：存储表的记录 .myd
+	索引文件：存储表的索引 .myi
+	对于一张表， 只要有主键或者unique约束， 会自动创建索引
+	
+InnoDB：
+	支持事物，数据奔溃可以恢复，安全，但是效率不高，不能压缩
+	格式文件：存储表的结构 .frm
+	索引文件/数据文件：tablespace
+
+MEMEORY：
+	存储在内存中，断电就无了
+```
+
+## 表连接
 
 ### 内连接
 
@@ -41,7 +144,7 @@ drop table if exist table_name;
 # 92：表的连接和筛选条件杂糅
 mysql> select tele, book.*  from author, book where book.aid = author.id;
 # 99：表链接条件独立， 筛选条件继续添加where即可， inner可以省略
-mysql> select tele, book.*  from author inner join book on book.aid = author.id where id = 1 and ...
+mysql> select tele, book.*  from author inner join book on book.aid = author.id where id = 1 sand ...
 ```
 
 **非等值连接:非等量关系**
@@ -70,7 +173,7 @@ inner join
 on a.leader_id = b.id
 ```
 
-## 外链接
+### 外链接
 
 **左外链接**：以左表为主表， 连接右表， 左表字段始终显示
 

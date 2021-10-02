@@ -265,9 +265,9 @@ private Date birth;
 
 ![image-20210910170447409](springboot/image-20210910170447409.png)
 
-![image-20210910170601342](sprintboot/image-20210910170601342.png)
+![image-20210910170601342](./sprintboot/image-20210910170601342.png)
 
-![image-20210910170650778](sprintboot/image-20210910170650778.png)
+![image-20210910170650778](./sprintboot/image-20210910170650778.png)
 
 #### 配置文件
 

@@ -5,8 +5,6 @@
 <span style="color:green">mybatis针对dao层的良好管理框架，传统的对于JDBC的操作繁琐冗余，mybatis通过映射配置文件的方式良好的管理JDBC驱动，还支持注解配置</span>
 
 <hr>
-
-
 ### JDBC驱动
 
 ```java
