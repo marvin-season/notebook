@@ -7,10 +7,8 @@
 ```properties
 1NF: 列不可再分
 2NF: 消除部份依赖
-3NF:消除传递依赖
+3NF: 消除传递依赖
 ```
-
-
 
 ## 创建表
 
@@ -175,9 +173,9 @@ on a.leader_id = b.id
 
 ### 外链接
 
-**左外链接**：以左表为主表， 连接右表， 左表字段始终显示
+**左外连接**：以左表为主表， 连接右表， 左表字段始终显示
 
-**右外链接**： 与左外链接相反
+**右外连接**： 与左外连接相反
 
 ## 子查询
 
@@ -251,10 +249,35 @@ limit 0,5
 
 ## 事务
 
+只有与**DML**相关
+数据库中一个事务可以理解为多条DML语句同时成功， 或者同时失败
+
+**InnoDB**引擎中有一个**事务性活动日志文件**
+
+**事务开始 **insert/update/... **事务结束**
+**事务提交**：持久化经过操作的数据到数据库中
+**事务回滚**：撤销操作，清楚事物活动日志文件， 回滚到上一次的提交点
+
+```mysql
+# mysql中事务默认自动提交
+# 开启事务
+start transaction;
+
+insert into tableName values();
+
+update tableName set name = ''
+
+# 回滚
+rollback;
+
+#	提交
+commit;
+```
+
 **事务的四大特性**
 
 ```TEX
-原子性：事务不可再分割
+原子性：  事务不可再分割
 持久性:   事务提交后数据应该提交到硬盘存储
 一致性:   数据操作整个过程守恒
 隔离性： 事务之间相互独立
@@ -265,10 +288,96 @@ limit 0,5
 ```properties
 READ UNCOMMITTED: 读未提交
 脏读 : 一个事务读到了另一个事务未提交的数据
-READ COMMITTED: 读已提交
+
+READ COMMITTED: 读已提交  -> Oracle
 不可重复读 : 在一个事务内， 两次读到的数据不一致
+
 REPEATED READ: 可重复读
-幻读 :　幻读是事务非独立执行时发生的一种现象。例如事务T1对一个表中所有的行的某个数据项做了从“1”修改为“2”的操作，这时事务T2又对这个表中插入了一行数据项，而这个数据项的数值还是为“1”并且提交给数据库。而操作事务T1的用户如果再查看刚刚修改的数据，会发现还有一行没有修改，其实这行是从事务T2中添加的，就好像产生幻觉一样，这就是发生了幻读			
-SERIALIZABLE:  串行化锁表
+幻读 :　幻读是事务非独立执行时发生的一种现象。例如事务T1对一个表中所有的行的某个数据项做了从“1”修改为“2”的操作，这时事务T2又对这个表中插入了一行数据，而这个数据的数值还是为“1”并且提交给数据库。而操作事务T1的用户如果再查看刚刚修改的数据，会发现还有一行没有修改，其实这行是从事务T2中添加的，就好像产生幻觉一样，这就是发生了幻读
+
+SERIALIZABLE:  串行化锁表， 排队加锁
+
+T1修改数据未提交 ， T2读取到这个数据， T1回滚。 T2读到的数据自然是假的-->脏读
+
+T1修改数据未提交 ， T2读取这个数据发现未发生变化， T1提交数据， T2读取数据发现数据发生变化
+对T2来说，在同一个事务内， 两次读取到的数据不一致 -->虚读(不可重复读)
+
+T1修改数据未提交， T2修改数据并提交， T1提交数据，T1查看数据发现有一条记录数据未修改 --> 幻读
 ```
+
+## 索引
+
+索引依附于表的某个字段，为了提高查询效率
+
+主键/唯一约束(mysql)上自动添加索引
+
+**单一索引**/**复合索引**/**主键索引**/**唯一性索引**
+
+**索引语法**
+
+```mysql
+# 创建索引
+create index indexName on tableName(fieldName)
+# 删除索引
+create index indexName on tableName
+```
+
+**SQL**是否使用了索引进行检索
+
+**explain ** sql --> type = ref
+
+**索引失效**
+
+```mysql
+1、模糊查询中以%开头
+select * from table_name where name like '%T'
+
+2、使用 or， 只有一侧有索引，则失效  name有索引，但是job没有索引
+select * from table_name where name = 'kim' or job = 'aaa'
+
+3、复合索引， 没有使用左侧的列查询
+create index index_name on table_name(job, sal);
+select * from table_name where sal = 100
+
+4、索引列参加了数学运算
+select * from table_name where sal + 1 = 100
+
+5、在where中索引列使用了函数
+select * from table-name where lower(name) = 'zhangsan'
+
+6、隐式的类型转换早场索引失效
+```
+
+## 视图
+
+view：**站在不同的角度看待同一份数据**
+
+对视图的增删改查会导致原表数据发生变化 ， 可以将多个表联合创建一个视图
+
+**创建视图**  create view view-name as select * from ... where ...
+
+**删除视图**  drop view view-name
+
+**更新视图**  update view-name set a = 'a' ...
+
+**查询视图**  select * from view-name were
+
+**作用**
+
+```properties
+1、封装了查询好的sql语句， 简化CRUD（Retrieve ）
+2、权限控制（屏蔽敏感字段）
+```
+
+## DBA命令
+
+**创建一个用户：**create user username IDENTIFIED BY 'PASSWORD'
+
+**授权：**GRANT ALL PRIVILEDGES on db-name.table-name to 'username'
+
+**回收权限：**REVOKE ... ...
+
+**数据导出**：mysqldump db-name > D:db-name.sql -uroot -p ppp
+
+**导入：**1、登陆，2、创建数据库，3、使用这个数据库，4、source D：db-name.sql
 
