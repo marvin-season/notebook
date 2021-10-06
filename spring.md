@@ -36,7 +36,7 @@ scope="prototype"
 多例的bean,即原型复制好多个bean,使用的时候才会创建bean
 ```
 
-![image-20200809100028082](spring/prototype-lifecycle.png)
+![image-20200809100028082](./spring/prototype-lifecycle.png)
 
 ```java
 others:session、request、global-sessio
@@ -61,7 +61,7 @@ ac.close();
 
 **scope="singleton"**
 
-![image-20200809101801913](spring/singleton.png)
+![image-20200809101801913](./spring/singleton.png)
 
 ![image-20200809101817266](spring/singleton-res.png)
 
@@ -264,7 +264,7 @@ public class MyAccountAspect {
 
     public void exceptSave(JoinPoint joinPoint){
         System.out.println("$异常通知...");
-    }
+    }s
 
     public void finalSave(){
         System.out.println("$最终通知...");
