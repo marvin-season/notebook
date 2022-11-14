@@ -31,6 +31,9 @@ vim /etc/docker/daemon.json
         "registry-mirrors":["https://m90kac7x.mirror.aliyuncs.com"]
 }
 # 从aliyun 账号获得，这里用的我的账号的
+
+systemctl daemon-reload然后重启docker
+docker info查看配置信息
 ```
 
  **目前未设置开机自启动**
@@ -145,6 +148,8 @@ docker rm redis6
 ###### **重新创建一个redis容器**
 
 ```sh
+需要先：docker volume create my-vol
+
 docker run -p 6379:6379 
 -v /usr/local/docker/volumes/redis/conf/redis.conf:/usr/local/etc/redis/redis.conf 
 -v /usr/local/docker/volumes/redis/data:/data 
